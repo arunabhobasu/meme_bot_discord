@@ -18,9 +18,9 @@ except json.JSONDecodeError as err:
     sys.exit(1)
 
 def process_subreddit(subreddit: str, webhook_url: str, index: int):
-    # Unique user-agent per sub avoids Reddit 429 bucket clustering
+    # Unique user-agent string per subreddit
     headers = {
-        "User-Agent": f"Mozilla/5.0 (Windows NT 10.0; Win64; x64; sub_{index}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        "User-Agent": f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.{index} Safari/537.36"
     }
     
     feed_url = f"https://www.reddit.com/r/{subreddit}/top/.rss?t=day"
@@ -41,19 +41,17 @@ def process_subreddit(subreddit: str, webhook_url: str, index: int):
         print(f"No posts found in feed for r/{subreddit}.")
         return
 
-    # Grab the top entry
     top_post = feed.entries[0]
     title = top_post.get("title", "")
     permalink = top_post.get("link", "")
-    author = top_post.get("author", "unknown")
 
-    # Convert reddit link to vxreddit for auto-embedded media (images, galleries, videos)
+    # Convert to vxreddit for native video/image/gallery embedding
     vx_url = permalink.replace("https://www.reddit.com", "https://www.vxreddit.com")
     vx_url = vx_url.replace("https://reddit.com", "https://www.vxreddit.com")
 
-    # Discord natively unpacks vxreddit cards into full video players and image carousels
+    # Clean formatting: displays the full title, followed by vxreddit's rich media card
     payload = {
-        "content": f"🏆 **Top meme of the day from r/{subreddit}** (by {author})\n**{title}**\n{vx_url}"
+        "content": f"## {title}\n{vx_url}"
     }
 
     try:
@@ -66,13 +64,16 @@ def process_subreddit(subreddit: str, webhook_url: str, index: int):
         print(f"✗ Error sending to Discord for r/{subreddit}: {e}")
 
 def main():
+    total = len(CHANNELS)
     for idx, entry in enumerate(CHANNELS):
         sub = entry.get("subreddit")
         webhook = entry.get("webhook_url")
         if sub and webhook:
             process_subreddit(sub, webhook, idx)
-            # 7-second cooldown between subreddits prevents Reddit's 429 lockout
-            time.sleep(7)
+            # 25-second cooldown between subreddits avoids Reddit's IP-level 429 lockout
+            if idx < total - 1:
+                print("Waiting 25s for Reddit rate limit reset...")
+                time.sleep(25)
 
 if __name__ == "__main__":
     main()
