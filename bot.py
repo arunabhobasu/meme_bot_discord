@@ -23,7 +23,7 @@ def process_subreddit(subreddit: str, webhook_url: str):
     }
     
     feed_url = f"https://www.reddit.com/r/{subreddit}/top/.rss?t=day"
-    print(f"Fetching r/{subreddit} via RSS...")
+    print(f"Fetching r/{subreddit}")
 
     try:
         resp = requests.get(feed_url, headers=headers, timeout=15)
@@ -44,11 +44,9 @@ def process_subreddit(subreddit: str, webhook_url: str):
     title = top_post.get("title", "")
     permalink = top_post.get("link", "")
 
-    # Convert to vxreddit so media embeds cleanly
     vx_url = permalink.replace("https://www.reddit.com", "https://www.vxreddit.com")
     vx_url = vx_url.replace("https://reddit.com", "https://www.vxreddit.com")
 
-    # Regular unformatted title on top, followed by the vxreddit link
     payload = {
         "content": f"{title}\n{vx_url}"
     }
@@ -56,11 +54,11 @@ def process_subreddit(subreddit: str, webhook_url: str):
     try:
         res = requests.post(webhook_url, json=payload, timeout=15)
         if res.status_code in (200, 204):
-            print(f"✓ Posted r/{subreddit} to Discord successfully.")
+            print(f"Posted r/{subreddit} to Discord successfully.")
         else:
-            print(f"✗ Discord error for r/{subreddit} ({res.status_code}): {res.text}")
+            print(f"Discord error for r/{subreddit} ({res.status_code}): {res.text}")
     except requests.RequestException as e:
-        print(f"✗ Error sending to Discord for r/{subreddit}: {e}")
+        print(f"Error sending to Discord for r/{subreddit}: {e}")
 
 def main():
     total = len(CHANNELS)
@@ -69,7 +67,6 @@ def main():
         webhook = entry.get("webhook_url")
         if sub and webhook:
             process_subreddit(sub, webhook)
-            # 60-second cooldown between subreddits
             if idx < total - 1:
                 print("Waiting 60s for Reddit rate limit reset...")
                 time.sleep(60)
