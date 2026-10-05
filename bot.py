@@ -41,15 +41,16 @@ def process_subreddit(subreddit: str, webhook_url: str):
         return
 
     top_post = feed.entries[0]
+    title = top_post.get("title", "")
     permalink = top_post.get("link", "")
 
     # Convert to vxreddit so media embeds cleanly
     vx_url = permalink.replace("https://www.reddit.com", "https://www.vxreddit.com")
     vx_url = vx_url.replace("https://reddit.com", "https://www.vxreddit.com")
 
-    # Only send the clean link to avoid any duplicate text
+    # Regular unformatted title on top, followed by the vxreddit link
     payload = {
-        "content": vx_url
+        "content": f"{title}\n{vx_url}"
     }
 
     try:
