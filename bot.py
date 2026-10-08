@@ -10,6 +10,13 @@ TOP_N = 5                  # how many top-of-week posts to inspect
 PRUNE_DAYS = 14            # forget posted IDs older than this
 COOLDOWN = 60              # seconds between subreddits
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0 Safari/537.36"
+}
+URL_TEMPLATES = [
+    "https://www.reddit.com/r/{sub}/top.json?t=week&limit={n}",
+]
+
 CHANNEL_MAPPINGS_RAW = os.environ.get("DISCORD_CHANNEL_MAPPINGS")
 
 if not CHANNEL_MAPPINGS_RAW:
@@ -44,20 +51,26 @@ def process_subreddit(entry: dict, state: dict) -> bool:
     webhook_url = entry["webhook_url"]
     min_score = entry.get("min_score", DEFAULT_MIN_SCORE)
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0 Safari/537.36"
-    }
-    url = f"https://www.reddit.com/r/{subreddit}/top.json?t=week&limit={TOP_N}"
     print(f"Fetching r/{subreddit} (min_score={min_score})...")
 
-    try:
-        resp = requests.get(url, headers=headers, timeout=15)
-    except requests.RequestException as e:
-        print(f"Network error querying r/{subreddit}: {e}")
-        return False
+    resp = None
+    for template in URL_TEMPLATES:
+        url = template.format(sub=subreddit, n=TOP_N)
+        host = url.split("/")[2]
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=15)
+        except requests.RequestException as e:
+            print(f"  {host}: network error: {e}")
+            time.sleep(3)
+            continue
+        print(f"  {host}: {r.status_code}")
+        if r.status_code == 200:
+            resp = r
+            break
+        time.sleep(3)
 
-    if resp.status_code != 200:
-        print(f"Failed to fetch r/{subreddit} ({resp.status_code})")
+    if resp is None:
+        print(f"Failed to fetch r/{subreddit} from all hosts.")
         return False
 
     try:
