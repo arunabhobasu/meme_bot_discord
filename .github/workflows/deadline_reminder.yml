@@ -1,0 +1,94 @@
+name: FPL Deadline Reminder
+
+# One cron per deadline, fired ~90 min before it (cron is UTC; GitHub may run
+# it up to ~30 min late, so the post lands roughly 1-1.5 hrs before).
+# Source: https://twentyclubs.com/fpl-deadlines
+on:
+  schedule:
+    # GW6: Sat 10 Oct 11:00 UK
+    - cron: '28 8 10 10 *'
+    # GW7: Sat 17 Oct 11:00 UK
+    - cron: '28 8 17 10 *'
+    # GW8: Fri 23 Oct 18:30 UK
+    - cron: '58 15 23 10 *'
+    # GW9: Sat 31 Oct 11:00 UK
+    - cron: '28 9 31 10 *'
+    # GW10: Fri 6 Nov 18:30 UK
+    - cron: '58 16 6 11 *'
+    # GW11: Sat 21 Nov 11:00 UK
+    - cron: '28 9 21 11 *'
+    # GW12: Fri 27 Nov 18:30 UK
+    - cron: '58 16 27 11 *'
+    # GW13: Wed 2 Dec 18:30 UK
+    - cron: '58 16 2 12 *'
+    # GW14: Sat 5 Dec 13:30 UK
+    - cron: '58 11 5 12 *'
+    # GW15: Sat 12 Dec 13:30 UK
+    - cron: '58 11 12 12 *'
+    # GW16: Sat 19 Dec 13:30 UK
+    - cron: '58 11 19 12 *'
+    # GW17: Sat 26 Dec 11:00 UK
+    - cron: '28 9 26 12 *'
+    # GW18: Tue 29 Dec 18:00 UK
+    - cron: '28 16 29 12 *'
+    # GW19: Fri 1 Jan 18:30 UK
+    - cron: '58 16 1 1 *'
+    # GW20: Tue 5 Jan 18:00 UK
+    - cron: '28 16 5 1 *'
+    # GW21: Sat 16 Jan 13:30 UK
+    - cron: '58 11 16 1 *'
+    # GW22: Sat 23 Jan 13:30 UK
+    - cron: '58 11 23 1 *'
+    # GW23: Sat 30 Jan 13:30 UK
+    - cron: '58 11 30 1 *'
+    # GW24: Sat 6 Feb 13:30 UK
+    - cron: '58 11 6 2 *'
+    # GW25: Wed 10 Feb 18:30 UK
+    - cron: '58 16 10 2 *'
+    # GW26: Sat 20 Feb 13:30 UK
+    - cron: '58 11 20 2 *'
+    # GW27: Sat 27 Feb 13:30 UK
+    - cron: '58 11 27 2 *'
+    # GW28: Wed 3 Mar 18:30 UK
+    - cron: '58 16 3 3 *'
+    # GW29: Sat 13 Mar 13:30 UK
+    - cron: '58 11 13 3 *'
+    # GW30: Sat 20 Mar 13:30 UK
+    - cron: '58 11 20 3 *'
+    # GW31: Sat 10 Apr 13:30 UK
+    - cron: '58 10 10 4 *'
+    # GW32: Sat 17 Apr 13:30 UK
+    - cron: '58 10 17 4 *'
+    # GW33: Sat 24 Apr 13:30 UK
+    - cron: '58 10 24 4 *'
+    # GW34: Sat 1 May 13:30 UK
+    - cron: '58 10 1 5 *'
+    # GW35: Sat 8 May 13:30 UK
+    - cron: '58 10 8 5 *'
+    # GW36: Sat 15 May 13:30 UK
+    - cron: '58 10 15 5 *'
+    # GW37: Sun 23 May 13:30 UK
+    - cron: '58 10 23 5 *'
+    # GW38: Sun 30 May 14:30 UK
+    - cron: '58 11 30 5 *'
+  workflow_dispatch:  # manual run = post the image right now (handy as a test)
+
+jobs:
+  remind:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Post reminder
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_DEADLINE_WEBHOOK }}
+        run: |
+          # Cron has no year field, so these dates fire again next year. Stop after the season.
+          if [ "$(date -u +%s)" -gt "$(date -u -d 2027-06-01 +%s)" ]; then
+            echo "Season is over, nothing to post."; exit 0
+          fi
+          curl -sS --fail-with-body \
+            -F 'payload_json={"embeds":[{"title":"T-59 mins to deadline","image":{"url":"attachment://ticking.jpg"}}]}' \
+            -F 'files[0]=@ticking.jpg' \
+            "$WEBHOOK"
