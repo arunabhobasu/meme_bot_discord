@@ -87,6 +87,6 @@ jobs:
             echo "Season is over, nothing to post."; exit 0
           fi
           curl -sS --fail-with-body \
-            -F 'payload_json={"embeds":[{"title":"T-59 mins to deadline","image":{"url":"attachment://ticking.jpg"}}]}' \
+            -F 'payload_json={"embeds":[{"title":"Last hour to make changes","image":{"url":"attachment://ticking.jpg"}}]}' \
             -F 'files[0]=@ticking.jpg' \
             "$WEBHOOK"
