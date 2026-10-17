@@ -5,18 +5,16 @@ name: FPL Deadline Reminder
 # Source: https://twentyclubs.com/fpl-deadlines
 on:
   schedule:
-    # GW6: Sat 10 Oct 11:00 UK
-    - cron: '28 8 10 10 *'
     # GW7: Sat 17 Oct 11:00 UK
-    - cron: '28 8 17 10 *'
+    - cron: '28 5 17 10 *'
     # GW8: Fri 23 Oct 18:30 UK
-    - cron: '58 15 23 10 *'
+    - cron: '58 10 23 10 *'
     # GW9: Sat 31 Oct 11:00 UK
-    - cron: '28 9 31 10 *'
+    - cron: '28 4 31 10 *'
     # GW10: Fri 6 Nov 18:30 UK
-    - cron: '58 16 6 11 *'
+    - cron: '58 15 6 11 *'
     # GW11: Sat 21 Nov 11:00 UK
-    - cron: '28 9 21 11 *'
+    - cron: '28 4 21 11 *'
     # GW12: Fri 27 Nov 18:30 UK
     - cron: '58 16 27 11 *'
     # GW13: Wed 2 Dec 18:30 UK
